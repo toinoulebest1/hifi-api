@@ -1,0 +1,36 @@
+# Coolify deployment (Build Pack: Docker Compose).
+#
+# In Coolify:
+#   1. Docker Compose Location: /docker-compose.coolify.yml
+#   2. Environment Variables: set ADMIN_KEY to a long random value (required;
+#      the deploy fails without it, so the admin panel is never left open).
+#   3. Domain for the hifi-api service: https://hifi.example.com:8000
+#      (":8000" is the container port; the public URL stays on 443).
+#   4. Deploy, then open https://hifi.example.com/admin.
+#
+# Notes:
+# - No host ports are published: Coolify's proxy handles HTTPS and routing.
+# - Accounts, API keys and settings live in SQLite on the hifi-data volume,
+#   so they survive redeploys.
+# - AUTO_SETUP=true: on first boot with no accounts, the deployment logs show
+#   a Tidal login link; open it and the account is added automatically.
+services:
+  hifi-api:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - hifi-data:/data
+    environment:
+      DATABASE_URL: /data/hifi.db
+      ADMIN_KEY: ${ADMIN_KEY:?ADMIN_KEY is required}
+      COUNTRY_CODE: ${COUNTRY_CODE:-US}
+      AUTO_SETUP: ${AUTO_SETUP:-true}
+      ATMOS_MODE: ${ATMOS_MODE:-prefer}
+      TRUST_PROXY_HEADERS: "true"
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      RUST_LOG: ${RUST_LOG:-info}
+
+volumes:
+  hifi-data:
