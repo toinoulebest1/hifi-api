@@ -4,6 +4,8 @@ RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/li
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --locked --release 2>/dev/null || true
+# Drop the stub so missing sources fail the build instead of shipping it.
+RUN rm -rf src
 COPY . .
 RUN touch src/main.rs
 RUN cargo build --locked --release
